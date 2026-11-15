@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { safeNext } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
@@ -24,11 +25,14 @@ export async function authenticate(_state: FormState, formData: FormData): Promi
     if (error) return { error: "Wrong email or password." };
   }
 
+  // Re-render the layout too, so the header reflects who is signed in.
+  revalidatePath("/", "layout");
   redirect(safeNext(formData.get("next")));
 }
 
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  revalidatePath("/", "layout");
   redirect("/login");
 }
