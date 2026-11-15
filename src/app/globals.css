@@ -120,18 +120,6 @@
   }
 }
 
-/* ---------- Phone tab bar ---------- */
-
-.tabbar {
-  /* Clears the iPhone home indicator. */
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-  background: rgb(92 22 30 / 0.82);
-  border-top: 1px solid rgb(255 255 255 / 0.12);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 -12px 30px -12px rgb(30 0 5 / 0.5);
-}
-
 /* ---------- Background + falling snow ---------- */
 
 .backdrop {

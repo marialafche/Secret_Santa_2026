@@ -21,8 +21,6 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#741e27",
-  // Lets the tab bar extend behind the iPhone home indicator.
-  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -31,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col font-sans">
         <Snow />
         <SiteHeader />
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-32 sm:pb-16">{children}</main>
+        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-16 sm:pt-6">{children}</main>
       </body>
     </html>
   );
