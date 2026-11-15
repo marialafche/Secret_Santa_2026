@@ -1,26 +1,178 @@
 @import "tailwindcss";
 
+/*
+ * Theme tokens. Page-level tokens are for content sitting on the red background;
+ * `.card` redefines them for content on the cream cards, so utilities like
+ * `text-muted` or `border-line` adapt automatically.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --page: #741e27;
+  --foreground: #fff6f1;
+  --muted: rgb(255 236 228 / 0.78);
+  --line: rgb(255 255 255 / 0.2);
+  --accent: #e5b453;
+  --tint: rgb(255 255 255 / 0.1);
+  --field: #ffffff;
+  --cream: #f6ece8;
+  --red: #b73a43;
+  --coral: #d2573f;
+  --green: #2f6b45;
 }
 
 @theme inline {
-  --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-tint: var(--tint);
+  --color-surface: var(--field);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background: var(--page);
+    color: var(--foreground);
+  }
+  h1,
+  h2 {
+    font-family: var(--font-fraunces);
+    letter-spacing: -0.015em;
+  }
+  h1 {
+    font-weight: 700;
+  }
+  ::selection {
+    background: var(--accent);
+    color: #2b1416;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .card {
+    --foreground: #2b1a1b;
+    --muted: #7c6461;
+    --line: #e7d6d1;
+    --accent: var(--red);
+    --tint: #f1e1dc;
+
+    @apply relative overflow-hidden rounded-3xl p-5 pt-7 sm:p-7 sm:pt-9;
+    background: var(--cream);
+    color: var(--foreground);
+    box-shadow: 0 24px 60px -24px rgb(40 0 5 / 0.55);
+  }
+  /* Candy-cane / airmail stripe along the top of every card. */
+  .card::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-1.5;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--red) 0 9px,
+      #fff 9px 15px,
+      var(--green) 15px 24px,
+      #fff 24px 30px
+    );
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-line px-4 py-3 text-foreground transition outline-none placeholder:text-muted/70;
+    background: var(--field);
+  }
+  .input:focus {
+    border-color: var(--coral);
+    box-shadow: 0 0 0 3px rgb(210 87 63 / 0.18);
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-semibold text-muted;
+  }
+
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply text-white hover:-translate-y-px hover:brightness-105 active:translate-y-0;
+    background: linear-gradient(135deg, var(--coral), var(--red));
+    box-shadow: 0 10px 24px -10px rgb(210 87 63 / 0.75);
+  }
+  .btn-secondary {
+    @apply border border-line text-foreground hover:bg-tint;
+    background: var(--field);
+  }
+  .btn-danger {
+    @apply border border-red-300 bg-white text-red-700 hover:bg-red-50;
+  }
+  .link {
+    @apply underline decoration-1 underline-offset-2 hover:text-accent;
+  }
+
+  /* Small pill like "Secret Santa · sign-ups open". */
+  .badge {
+    @apply inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold;
+    border-color: rgb(255 255 255 / 0.25);
+    background: rgb(255 255 255 / 0.12);
+  }
+  .badge::before {
+    content: "";
+    @apply size-2.5 rounded-full;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgb(229 180 83 / 0.3);
+  }
+}
+
+/* ---------- Phone tab bar ---------- */
+
+.tabbar {
+  /* Clears the iPhone home indicator. */
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  background: rgb(92 22 30 / 0.82);
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 -12px 30px -12px rgb(30 0 5 / 0.5);
+}
+
+/* ---------- Background + falling snow ---------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 8% -8%, rgb(160 48 58 / 0.65), transparent 70%),
+    radial-gradient(700px 600px at 108% 60%, rgb(110 70 40 / 0.55), transparent 70%),
+    linear-gradient(165deg, #82222c 0%, #741e27 45%, #66191f 100%);
+}
+
+.flake {
+  position: absolute;
+  top: -12px;
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 9999px;
+  background: #fff;
+  opacity: var(--opacity);
+  animation: snowfall var(--duration) linear var(--delay) infinite;
+}
+
+@keyframes snowfall {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(var(--drift), 55vh, 0);
+  }
+  to {
+    transform: translate3d(0, 110vh, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flake {
+    animation: none;
+    transform: translateY(var(--y));
+  }
 }

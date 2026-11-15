@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎅 Secret Santa
 
-## Getting Started
+A private Secret Santa app for one group of friends: invite link, wishlists,
+exclusions, a server-side draw, and an anonymous chat where each Santa can ask
+their recipient a limited number of questions.
 
-First, run the development server:
+Built with Next.js, Supabase (database, login, realtime) and Tailwind CSS.
+
+## How it works
+
+- **Join:** friends open the invite link, create an account (email + password) and pick a display name.
+  The **first person to join becomes the organizer**.
+- **Wishlists:** everyone adds wishes (with optional link and note) and can browse everyone else's.
+- **Exclusions:** the organizer marks pairs who shouldn't draw each other (both directions).
+- **Draw:** the organizer clicks "Draw names". The server computes the pairs with the secret key,
+  so the full list never reaches any browser, not even the organizer's.
+- **Anonymous chat:** each Santa can ask their recipient up to 10 numbered questions
+  (configurable). The recipient sees them as "Your Santa" and can answer as much as they like.
+  Messages appear live.
+
+Secrecy is enforced by the database (row level security), not just hidden in the UI:
+each person can read only their own match. See [supabase/schema.sql](supabase/schema.sql).
+
+> The owner of the Supabase project can still open the `assignments` table in the Supabase
+> dashboard, so no peeking. 😉
+
+## Setup
+
+### 1. Create the Supabase project
+
+1. Sign up at [supabase.com](https://supabase.com) and create a new project (free plan is fine).
+2. Open **SQL Editor → New query**, paste the contents of `supabase/schema.sql`, and click **Run**.
+3. Open **Authentication → Sign In / Providers → Email** and switch **off** "Confirm email".
+   (Supabase's built-in email service only sends a few emails per hour, which isn't enough for a group.)
+
+### 2. Run it locally
 
 ```bash
+cp .env.example .env.local   # then fill in the three values from Supabase → Project Settings → API Keys
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Sign up, then go to `/join` and enter the invite code. You can find it
+in Supabase under **Table Editor → settings → invite_code**. After that, the **Organizer** page
+shows the full invite link.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Deploy to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Push this folder to a new GitHub repository.
+2. On [vercel.com](https://vercel.com) click **Add New → Project** and import the repository.
+3. Add the three environment variables from `.env.local` and click **Deploy**.
+4. In Supabase, open **Authentication → URL Configuration** and set **Site URL** to your Vercel URL.
+5. Open your site, join first (so you become the organizer), and share the invite link from the
+   **Organizer** page.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command         | What it does                        |
+| --------------- | ----------------------------------- |
+| `npm run dev`   | Start the app locally               |
+| `npm test`      | Run the draw algorithm tests        |
+| `npm run lint`  | Check the code for problems         |
+| `npm run build` | Build for production                |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+supabase/schema.sql      Database tables, security rules and functions
+src/lib/draw.ts          The draw algorithm (+ draw.test.ts)
+src/lib/data.ts          Server-side data loading and auth helpers
+src/app/page.tsx         Home: your match, countdown, members
+src/app/login, join      Sign in / sign up and joining the group
+src/app/wishlist         Your wishlist and everyone else's
+src/app/chat             Anonymous Q&A with live updates
+src/app/admin            Organizer: invite link, settings, exclusions, draw
+src/app/globals.css      Theme colors (placeholder until we design the look)
+```
