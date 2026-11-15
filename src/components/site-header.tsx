@@ -18,7 +18,7 @@ export async function SiteHeader() {
   return (
     <header className="mx-auto flex w-full max-w-3xl flex-wrap items-center px-4 py-3 text-sm font-medium text-muted md:flex-nowrap md:py-4">
       <Link href="/" className="mr-auto whitespace-nowrap py-1 font-display text-lg font-bold text-foreground">
-        🎅 Secret Santa
+        🎅 Secret Santa Utaiki
       </Link>
 
       {user && (

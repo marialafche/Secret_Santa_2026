@@ -16,7 +16,7 @@ export default async function JoinPage({ searchParams }: PageProps<"/join">) {
 
   return (
     <div className="mx-auto max-w-lg py-4 sm:py-10">
-      <Hero badge="Secret Santa · almost there" title="One last thing:" highlight="who are you?">
+      <Hero badge="Secret Santa Utaiki · almost there" title="One last thing:" highlight="who are you?">
         Pick the name everyone will see. Your Santa will be shopping for this person! 🎅
       </Hero>
 
