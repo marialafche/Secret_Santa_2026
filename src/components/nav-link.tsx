@@ -2,21 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
 
-/** Menu link that's highlighted while you're on its page (or a page below it). */
-export function NavLink({ href, children }: { href: string; children: ReactNode }) {
+/**
+ * Menu link that's highlighted while you're on its page (or a page below it).
+ * On phones the links share the row equally with the icon above the label.
+ */
+export function NavLink({ href, icon, label }: { href: string; icon: string; label: string }) {
   const pathname = usePathname();
   const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
   return (
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 transition hover:text-foreground ${
+      className={`flex flex-1 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-1 py-1.5 text-xs transition hover:text-foreground md:flex-none md:flex-row md:gap-1.5 md:rounded-full md:px-3 md:text-sm ${
         active ? "bg-tint text-foreground" : ""
       }`}
     >
-      {children}
+      <span aria-hidden="true" className="text-lg leading-none md:text-sm">
+        {icon}
+      </span>
+      {label}
     </Link>
   );
 }

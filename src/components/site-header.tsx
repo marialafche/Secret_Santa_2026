@@ -4,11 +4,11 @@ import { NavLink } from "@/components/nav-link";
 import { getMember, getUser } from "@/lib/data";
 
 const pages = [
-  { href: "/", label: "🏠 Home" },
-  { href: "/wishlist", label: "🎁 Wishlists" },
-  { href: "/chat", label: "💬 Chat" },
+  { href: "/", icon: "🏠", label: "Home" },
+  { href: "/wishlist", icon: "🎁", label: "Wishlists" },
+  { href: "/chat", icon: "💬", label: "Chat" },
 ];
-const organizerPage = { href: "/admin", label: "⭐ Organizer" };
+const organizerPage = { href: "/admin", icon: "⭐", label: "Organizer" };
 
 /** On wide screens the links sit next to the logo; on phones and tablets they get their own row below it. */
 export async function SiteHeader() {
@@ -32,12 +32,10 @@ export async function SiteHeader() {
       {links.length > 0 && (
         <nav
           aria-label="Main"
-          className="-mx-4 mt-2 flex w-[calc(100%+2rem)] gap-1 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:mt-0 md:w-auto md:overflow-visible md:px-0"
+          className="mt-2 flex w-full gap-1 md:mt-0 md:w-auto"
         >
           {links.map((l) => (
-            <NavLink key={l.href} href={l.href}>
-              {l.label}
-            </NavLink>
+            <NavLink key={l.href} href={l.href} icon={l.icon} label={l.label} />
           ))}
         </nav>
       )}
