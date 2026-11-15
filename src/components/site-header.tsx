@@ -4,11 +4,11 @@ import { NavLink } from "@/components/nav-link";
 import { getMember, getUser } from "@/lib/data";
 
 const pages = [
-  { href: "/", icon: "рџЏ ", label: "Home" },
-  { href: "/wishlist", icon: "рџЋЃ", label: "Wishlists" },
-  { href: "/chat", icon: "рџ’¬", label: "Chat" },
+  { href: "/", icon: "🏠", label: "Home" },
+  { href: "/wishlist", icon: "🎁", label: "Wishlists" },
+  { href: "/chat", icon: "💬", label: "Chat" },
 ];
-const organizerPage = { href: "/admin", icon: "в­ђ", label: "Organizer" };
+const organizerPage = { href: "/admin", icon: "⭐", label: "Organizer" };
 
 /** On wide screens the links sit next to the logo; on phones and tablets they get their own row below it. */
 export async function SiteHeader() {
@@ -18,7 +18,7 @@ export async function SiteHeader() {
   return (
     <header className="mx-auto flex w-full max-w-3xl flex-wrap items-center px-4 py-3 text-sm font-medium text-muted md:flex-nowrap md:py-4">
       <Link href="/" className="mr-auto whitespace-nowrap py-1 font-display text-lg font-bold text-foreground">
-        рџЋ… Secret Santa Utaiki
+        🎅 Secret Santa
       </Link>
 
       {user && (
