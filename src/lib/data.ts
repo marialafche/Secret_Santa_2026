@@ -4,10 +4,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Member, Settings } from "@/lib/types";
 
-export const getUser = cache(async () => {
+/**
+ * The signed-in user, or null. Uses getClaims, which verifies the login token
+ * locally (the project uses asymmetric signing keys) instead of asking Supabase.
+ */
+export const getUser = cache(async (): Promise<{ id: string } | null> => {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  return data.user;
+  const { data } = await supabase.auth.getClaims();
+  return data?.claims.sub ? { id: data.claims.sub } : null;
 });
 
 /** The signed-in user's membership, or null if they haven't joined the group. */

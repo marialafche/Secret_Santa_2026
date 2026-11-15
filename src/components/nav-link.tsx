@@ -12,7 +12,7 @@ export function NavLink({ href, children }: { href: string; children: ReactNode 
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`shrink-0 rounded-full px-3 py-1.5 transition hover:text-foreground ${
+      className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 transition hover:text-foreground ${
         active ? "bg-tint text-foreground" : ""
       }`}
     >
