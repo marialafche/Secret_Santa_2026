@@ -1,124 +1,71 @@
 import Link from "next/link";
-import { Reveal } from "@/components/reveal";
-import {
-  daysUntil,
-  formatDate,
-  getMembers,
-  getMyRecipient,
-  getSettings,
-  requireMember,
-} from "@/lib/data";
-import { createClient } from "@/lib/supabase/server";
-import type { Message } from "@/lib/types";
+import { redirect } from "next/navigation";
+import { ActionForm, SubmitButton } from "@/components/form";
+import { getMyGroups, isOwner, requireUser } from "@/lib/data";
+import { goToInvite } from "./join/actions";
 
-export default async function Home() {
-  const me = await requireMember();
-  const [settings, members, recipient] = await Promise.all([
-    getSettings(),
-    getMembers(),
-    getMyRecipient(),
-  ]);
+export default async function MyGroupsPage() {
+  await requireUser();
+  const [groups, owner] = await Promise.all([getMyGroups(), isOwner()]);
+
+  // Most people are in a single group: take them straight there.
+  if (groups.length === 1 && !owner) redirect(`/g/${groups[0].group.id}`);
 
   return (
     <div className="space-y-6">
-      <section className="space-y-1">
-        <p className="text-muted">Hi {me.display_name} 👋</p>
-        <h1 className="text-4xl sm:text-5xl">{settings.group_name}</h1>
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
-          {settings.budget && <span>💰 Budget: {settings.budget}</span>}
-          {settings.exchange_date && (
-            <span>
-              📅 {formatDate(settings.exchange_date)}
-              <DaysLeft date={settings.exchange_date} />
-            </span>
-          )}
-        </div>
-      </section>
+      <h1 className="text-4xl sm:text-5xl">Your groups</h1>
 
-      {recipient ? (
-        <AfterDraw recipientId={recipient.id} recipientName={recipient.display_name} myId={me.id} maxQuestions={settings.max_questions} />
+      {owner && (
+        <Link href="/owner" className="card block transition hover:-translate-y-0.5">
+          <p className="font-semibold">⭐ All groups</p>
+          <p className="text-sm text-muted">Create new groups and get their invite links.</p>
+        </Link>
+      )}
+
+      {groups.length > 0 ? (
+        <ul className="space-y-3">
+          {groups.map(({ group, me }) => (
+            <li key={group.id}>
+              <Link
+                href={`/g/${group.id}`}
+                className="card flex items-center gap-4 transition hover:-translate-y-0.5"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-xl font-bold break-words">{group.name}</p>
+                  <p className="text-sm text-muted">
+                    You&apos;re {me.display_name}
+                    {me.is_admin && " · organizer"}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-tint px-3 py-1 text-xs font-semibold">
+                  {group.drawn_at ? "🎁 Names drawn" : "⏳ Waiting"}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       ) : (
-        <section className="card space-y-4">
-          <h2 className="text-lg font-semibold">Waiting for the draw ⏳</h2>
+        <section className="card space-y-2">
+          <h2 className="text-lg font-semibold">You&apos;re not in a group yet</h2>
           <p className="text-muted">
-            Once everyone has joined, the organizer will draw names. Meanwhile, write your wishlist
-            so your Santa knows what you&apos;d like.
+            Open the invite link your organizer sent you, or paste the code from it below.
           </p>
-          <Link href="/wishlist" className="btn btn-primary">
-            Write my wishlist
-          </Link>
         </section>
       )}
 
       <section className="card space-y-3">
-        <h2 className="text-lg font-semibold">Who&apos;s in ({members.length})</h2>
-        <ul className="flex flex-wrap gap-2">
-          {members.map((m) => (
-            <li key={m.id} className="rounded-full border border-line px-3 py-1 text-sm">
-              {m.display_name}
-              {m.is_admin && <span className="text-muted"> · organizer</span>}
-            </li>
-          ))}
-        </ul>
+        <h2 className="text-lg font-semibold">Join another group</h2>
+        <ActionForm action={goToInvite} className="flex flex-col gap-2 sm:flex-row">
+          <input
+            name="code"
+            required
+            placeholder="Invite link or code"
+            aria-label="Invite link or code"
+            className="input"
+          />
+          <SubmitButton>Join</SubmitButton>
+        </ActionForm>
       </section>
     </div>
-  );
-}
-
-function DaysLeft({ date }: { date: string }) {
-  const days = daysUntil(date);
-  if (days < 0) return null;
-  return <> · {days === 0 ? "today!" : `${days} day${days === 1 ? "" : "s"} to go`}</>;
-}
-
-async function AfterDraw({
-  recipientId,
-  recipientName,
-  myId,
-  maxQuestions,
-}: {
-  recipientId: string;
-  recipientName: string;
-  myId: string;
-  maxQuestions: number;
-}) {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("messages")
-    .select("id, recipient_id, question_id")
-    .in("recipient_id", [recipientId, myId]);
-  const messages = (data ?? []) as Pick<Message, "id" | "recipient_id" | "question_id">[];
-
-  const questionsAsked = messages.filter(
-    (m) => m.recipient_id === recipientId && m.question_id === null,
-  ).length;
-  const answered = new Set(messages.map((m) => m.question_id));
-  const unanswered = messages.filter(
-    (m) => m.recipient_id === myId && m.question_id === null && !answered.has(m.id),
-  ).length;
-
-  return (
-    <>
-      <section className="card space-y-4">
-        <Reveal name={recipientName} />
-        <div className="flex flex-wrap gap-2">
-          <Link href={`/wishlist/${recipientId}`} className="btn btn-secondary">
-            See their wishlist
-          </Link>
-          <Link href="/chat" className="btn btn-secondary">
-            Ask them a question ({maxQuestions - questionsAsked} left)
-          </Link>
-        </div>
-      </section>
-
-      {unanswered > 0 && (
-        <Link href="/chat" className="card block ring-2 ring-accent transition hover:-translate-y-0.5">
-          <p className="font-semibold">
-            🎅 Your Santa asked you {unanswered} question{unanswered === 1 ? "" : "s"}
-          </p>
-          <p className="text-sm text-muted">Tap to answer</p>
-        </Link>
-      )}
-    </>
   );
 }

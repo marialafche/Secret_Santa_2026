@@ -1,25 +1,28 @@
-import { headers } from "next/headers";
 import { CopyButton } from "@/components/copy-button";
 import { ActionForm, SubmitButton } from "@/components/form";
-import { getMembers, getSettings, requireAdmin } from "@/lib/data";
+import { getMembers, inviteLinkFor, requireGroupAdmin } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import { addExclusion, removeExclusion, resetDraw, runDraw, updateSettings } from "./actions";
 
-export default async function AdminPage() {
-  await requireAdmin();
+export default async function AdminPage({ params }: PageProps<"/g/[groupId]/admin">) {
+  const { groupId } = await params;
+  const { group } = await requireGroupAdmin(groupId);
+  const members = await getMembers(groupId);
   const supabase = await createClient();
-  const [settings, members, { data: exclusions }, h] = await Promise.all([
-    getSettings(),
-    getMembers(),
-    supabase.from("exclusions").select("member_a, member_b"),
-    headers(),
+  const [{ data: exclusions }, inviteLink] = await Promise.all([
+    // You may be in several groups, so only load this group's exclusions.
+    supabase
+      .from("exclusions")
+      .select("member_a, member_b")
+      .in(
+        "member_a",
+        members.map((m) => m.id),
+      ),
+    inviteLinkFor(group.invite_code),
   ]);
 
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const protocol = h.get("x-forwarded-proto") ?? "http";
-  const inviteLink = `${protocol}://${host}/join?code=${settings.invite_code}`;
   const nameOf = (id: string) => members.find((m) => m.id === id)?.display_name ?? "?";
-  const drawn = settings.drawn_at !== null;
+  const drawn = group.drawn_at !== null;
 
   return (
     <div className="space-y-6">
@@ -40,17 +43,17 @@ export default async function AdminPage() {
 
       <section className="card space-y-4">
         <h2 className="text-lg font-semibold">Settings</h2>
-        <ActionForm action={updateSettings} className="grid gap-4 sm:grid-cols-2">
+        <ActionForm action={updateSettings.bind(null, groupId)} className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label htmlFor="group_name" className="label">
+            <label htmlFor="name" className="label">
               Group name
             </label>
             <input
-              id="group_name"
-              name="group_name"
+              id="name"
+              name="name"
               required
               maxLength={60}
-              defaultValue={settings.group_name}
+              defaultValue={group.name}
               className="input"
             />
           </div>
@@ -63,7 +66,7 @@ export default async function AdminPage() {
               name="budget"
               maxLength={40}
               placeholder="e.g. €30"
-              defaultValue={settings.budget ?? ""}
+              defaultValue={group.budget ?? ""}
               className="input"
             />
           </div>
@@ -75,7 +78,7 @@ export default async function AdminPage() {
               id="exchange_date"
               name="exchange_date"
               type="date"
-              defaultValue={settings.exchange_date ?? ""}
+              defaultValue={group.exchange_date ?? ""}
               className="input"
             />
           </div>
@@ -90,7 +93,7 @@ export default async function AdminPage() {
               min={1}
               max={50}
               required
-              defaultValue={settings.max_questions}
+              defaultValue={group.max_questions}
               className="input"
             />
           </div>
@@ -116,7 +119,7 @@ export default async function AdminPage() {
                   {nameOf(e.member_a)} ↔ {nameOf(e.member_b)}
                 </span>
                 {!drawn && (
-                  <form action={removeExclusion}>
+                  <form action={removeExclusion.bind(null, groupId)}>
                     <input type="hidden" name="a" value={e.member_a} />
                     <input type="hidden" name="b" value={e.member_b} />
                     <button type="submit" className="text-sm text-muted hover:text-red-700">
@@ -133,7 +136,7 @@ export default async function AdminPage() {
 
         {!drawn && (
           <ActionForm
-            action={addExclusion}
+            action={addExclusion.bind(null, groupId)}
             className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:items-center"
           >
             <MemberSelect name="a" members={members} />
@@ -150,13 +153,13 @@ export default async function AdminPage() {
           <>
             <p>
               ✅ Names were drawn on{" "}
-              {new Date(settings.drawn_at!).toLocaleDateString("en-GB", { dateStyle: "long" })}
+              {new Date(group.drawn_at!).toLocaleDateString("en-GB", { dateStyle: "long" })}
               . Nobody, including you, can see the full list.
             </p>
-            <ActionForm action={resetDraw} className="space-y-2">
+            <ActionForm action={resetDraw.bind(null, groupId)} className="space-y-2">
               <SubmitButton
                 variant="danger"
-                confirm="Reset the draw? This deletes every match and all chat messages."
+                confirm="Reset the draw? This deletes every match and all chat messages in this group."
               >
                 Reset draw
               </SubmitButton>
@@ -168,7 +171,7 @@ export default async function AdminPage() {
               {members.length} {members.length === 1 ? "person has" : "people have"} joined.
               Once everyone is in, draw the names. After that no one new can join.
             </p>
-            <ActionForm action={runDraw} className="space-y-2">
+            <ActionForm action={runDraw.bind(null, groupId)} className="space-y-2">
               <SubmitButton confirm={`Draw names for ${members.length} people now?`}>
                 🎲 Draw names
               </SubmitButton>

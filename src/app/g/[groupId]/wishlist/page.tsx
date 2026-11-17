@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/form";
 import { Wishlist } from "@/components/wishlist";
-import { getMyRecipient, requireMember } from "@/lib/data";
+import { getGroupContext, getMyRecipient } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import type { WishlistItem } from "@/lib/types";
 import { addItem, deleteItem } from "./actions";
 
-export default async function WishlistPage() {
-  const me = await requireMember();
+export default async function WishlistPage({ params }: PageProps<"/g/[groupId]/wishlist">) {
+  const { groupId } = await params;
+  const { me, group } = await getGroupContext(groupId);
   const supabase = await createClient();
   const [{ data }, recipient] = await Promise.all([
     supabase
@@ -15,15 +16,18 @@ export default async function WishlistPage() {
       .select("id, member_id, title, url, note")
       .eq("member_id", me.id)
       .order("created_at"),
-    getMyRecipient(),
+    getMyRecipient(groupId),
   ]);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-4xl sm:text-5xl">Wishlists</h1>
+      <h1 className="text-4xl sm:text-5xl">Wishlist</h1>
 
       {recipient && (
-        <Link href={`/wishlist/${recipient.id}`} className="card block transition hover:-translate-y-0.5">
+        <Link
+          href={`/g/${groupId}/wishlist/recipient`}
+          className="card block transition hover:-translate-y-0.5"
+        >
           <p className="font-semibold">🎁 See what {recipient.display_name} wished for</p>
           <p className="text-sm text-muted">Only you can see their wishlist.</p>
         </Link>
@@ -31,14 +35,14 @@ export default async function WishlistPage() {
 
       <section className="card space-y-4">
         <div>
-          <h2 className="text-lg font-semibold">My wishlist</h2>
-          <p className="text-sm text-muted">Only your Secret Santa will see this.</p>
+          <h2 className="text-lg font-semibold">My wishlist for {group.name}</h2>
+          <p className="text-sm text-muted">Only your Secret Santa in this group will see this.</p>
         </div>
         <Wishlist
           items={(data ?? []) as WishlistItem[]}
           empty="Nothing yet. Add a few ideas to help your Santa!"
           action={(item) => (
-            <form action={deleteItem}>
+            <form action={deleteItem.bind(null, groupId)}>
               <input type="hidden" name="id" value={item.id} />
               <button type="submit" className="text-sm text-muted hover:text-red-700">
                 Remove
@@ -47,7 +51,7 @@ export default async function WishlistPage() {
           )}
         />
 
-        <ActionForm action={addItem} className="space-y-3 border-t border-line pt-4">
+        <ActionForm action={addItem.bind(null, groupId)} className="space-y-3 border-t border-line pt-4">
           <div>
             <label htmlFor="title" className="label">
               What would you like?

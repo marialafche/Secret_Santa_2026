@@ -15,8 +15,8 @@ const body = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Secret Santa Utaiki",
-  description: "Secret Santa Utaiki: draw names, share wishlists and ask anonymous questions.",
+  title: "Secret Santa",
+  description: "Secret Santa: draw names, share wishlists and ask anonymous questions.",
 };
 
 export const viewport: Viewport = {

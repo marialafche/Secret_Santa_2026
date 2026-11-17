@@ -1,43 +1,28 @@
 import Link from "next/link";
 import { signOut } from "@/app/login/actions";
-import { NavLink } from "@/components/nav-link";
-import { getMember, getUser } from "@/lib/data";
+import { getMyGroups, getUser } from "@/lib/data";
 
-const pages = [
-  { href: "/", icon: "🏠", label: "Home" },
-  { href: "/wishlist", icon: "🎁", label: "Wishlists" },
-  { href: "/chat", icon: "💬", label: "Chat" },
-];
-const organizerPage = { href: "/admin", icon: "⭐", label: "Organizer" };
-
-/** On wide screens the links sit next to the logo; on phones and tablets they get their own row below it. */
+/** Logo and account links. Each group's own menu lives in the group layout. */
 export async function SiteHeader() {
-  const [user, member] = await Promise.all([getUser(), getMember()]);
-  const links = member ? [...pages, ...(member.is_admin ? [organizerPage] : [])] : [];
+  const user = await getUser();
+  const groupCount = user ? (await getMyGroups()).length : 0;
 
   return (
-    <header className="mx-auto flex w-full max-w-3xl flex-wrap items-center px-4 py-3 text-sm font-medium text-muted md:flex-nowrap md:py-4">
+    <header className="mx-auto flex w-full max-w-3xl items-center gap-1 px-4 py-3 text-sm font-medium text-muted md:py-4">
       <Link href="/" className="mr-auto whitespace-nowrap py-1 font-display text-lg font-bold text-foreground">
         🎅 Secret Santa
       </Link>
-
+      {groupCount > 1 && (
+        <Link href="/" className="whitespace-nowrap px-3 py-1.5 hover:text-foreground">
+          My groups
+        </Link>
+      )}
       {user && (
-        <form action={signOut} className="md:order-last">
+        <form action={signOut}>
           <button type="submit" className="cursor-pointer whitespace-nowrap px-3 py-1.5 hover:text-foreground">
             Sign out
           </button>
         </form>
-      )}
-
-      {links.length > 0 && (
-        <nav
-          aria-label="Main"
-          className="mt-2 flex w-full gap-1 md:mt-0 md:w-auto"
-        >
-          {links.map((l) => (
-            <NavLink key={l.href} href={l.href} icon={l.icon} label={l.label} />
-          ))}
-        </nav>
       )}
     </header>
   );

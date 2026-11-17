@@ -14,12 +14,12 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <div className="mx-auto max-w-lg py-4 sm:py-10">
       {signingIn ? (
-        <Hero badge="Secret Santa Utaiki · welcome back" title="Ho ho ho," highlight="hello again!">
+        <Hero badge="Secret Santa · welcome back" title="Ho ho ho," highlight="hello again!">
           Sign in to see who you&apos;re shopping for, peek at their wishlist and send them a
           sneaky question. 🎁
         </Hero>
       ) : (
-        <Hero badge="Secret Santa Utaiki · sign-ups open" title="Ho ho ho —" highlight="you in?">
+        <Hero badge="Secret Santa · sign-ups open" title="Ho ho ho —" highlight="you in?">
           Create an account to join this year&apos;s Secret Santa. When the draw opens, come back
           here and pull a name from the hat. 🎩
         </Hero>

@@ -1,11 +1,14 @@
-import { getMyRecipient, getSettings, requireMember } from "@/lib/data";
+import { getGroupContext, getMyRecipient } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import type { Message } from "@/lib/types";
 import { ChatThread } from "./chat-thread";
 
-export default async function ChatPage() {
-  const me = await requireMember();
-  const [settings, recipient] = await Promise.all([getSettings(), getMyRecipient()]);
+export default async function ChatPage({ params }: PageProps<"/g/[groupId]/chat">) {
+  const { groupId } = await params;
+  const [{ me, group }, recipient] = await Promise.all([
+    getGroupContext(groupId),
+    getMyRecipient(groupId),
+  ]);
 
   if (!recipient) {
     return (
@@ -37,9 +40,10 @@ export default async function ChatPage() {
         </div>
         <ChatThread
           mode="santa"
+          groupId={groupId}
           threadId={recipient.id}
           initialMessages={messages.filter((m) => m.recipient_id === recipient.id)}
-          maxQuestions={settings.max_questions}
+          maxQuestions={group.max_questions}
         />
       </section>
 
@@ -50,9 +54,10 @@ export default async function ChatPage() {
         </div>
         <ChatThread
           mode="recipient"
+          groupId={groupId}
           threadId={me.id}
           initialMessages={messages.filter((m) => m.recipient_id === me.id)}
-          maxQuestions={settings.max_questions}
+          maxQuestions={group.max_questions}
         />
       </section>
     </div>

@@ -4,12 +4,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Menu link that's highlighted while you're on its page (or a page below it).
+ * Menu link that's highlighted while you're on its page (or, unless `exact`, a page below it).
  * On phones the links share the row equally with the icon above the label.
  */
-export function NavLink({ href, icon, label }: { href: string; icon: string; label: string }) {
+export function NavLink({
+  href,
+  icon,
+  label,
+  exact = false,
+}: {
+  href: string;
+  icon: string;
+  label: string;
+  exact?: boolean;
+}) {
   const pathname = usePathname();
-  const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const active = exact ? pathname === href : pathname.startsWith(href);
   return (
     <Link
       href={href}

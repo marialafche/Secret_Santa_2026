@@ -7,13 +7,14 @@ import type { Message } from "@/lib/types";
 type Props = {
   /** "santa": I ask my recipient. "recipient": I answer my Santa. */
   mode: "santa" | "recipient";
-  /** The recipient's member id; each recipient has exactly one thread. */
+  groupId: string;
+  /** The recipient's membership id; each recipient has exactly one thread. */
   threadId: string;
   initialMessages: Message[];
   maxQuestions: number;
 };
 
-export function ChatThread({ mode, threadId, initialMessages, maxQuestions }: Props) {
+export function ChatThread({ mode, groupId, threadId, initialMessages, maxQuestions }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [messages, setMessages] = useState(initialMessages);
 
@@ -103,7 +104,10 @@ export function ChatThread({ mode, threadId, initialMessages, maxQuestions }: Pr
               placeholder="Ask something…"
               button={`Ask (${left} left)`}
               onSend={async (body) => {
-                const { data, error } = await supabase.rpc("ask_question", { p_body: body });
+                const { data, error } = await supabase.rpc("ask_question", {
+                  p_group_id: groupId,
+                  p_body: body,
+                });
                 if (data) addMessage(data as Message);
                 return error?.message;
               }}

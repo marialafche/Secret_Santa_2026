@@ -1,12 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireMember } from "@/lib/data";
+import { getGroupContext } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/lib/types";
 
-export async function addItem(_state: FormState, formData: FormData): Promise<FormState> {
-  const me = await requireMember();
+// Bound to a group id in the page: addItem.bind(null, groupId).
+export async function addItem(
+  groupId: string,
+  _state: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { me } = await getGroupContext(groupId);
   const title = String(formData.get("title") ?? "").trim();
   const url = String(formData.get("url") ?? "").trim();
   const note = String(formData.get("note") ?? "").trim();
@@ -25,14 +30,14 @@ export async function addItem(_state: FormState, formData: FormData): Promise<Fo
   });
   if (error) return { error: error.message };
 
-  revalidatePath("/wishlist");
+  revalidatePath(`/g/${groupId}/wishlist`);
   return null;
 }
 
-export async function deleteItem(formData: FormData) {
-  await requireMember();
+export async function deleteItem(groupId: string, formData: FormData) {
+  await getGroupContext(groupId);
   const supabase = await createClient();
   // Row level security only lets people delete their own items.
   await supabase.from("wishlist_items").delete().eq("id", Number(formData.get("id")));
-  revalidatePath("/wishlist");
+  revalidatePath(`/g/${groupId}/wishlist`);
 }
