@@ -17,6 +17,7 @@ export async function SiteHeader() {
       </Link>
       {groupCount > 1 && <HeaderLink href="/" icon="🎄" label="My groups" />}
       {owner && <HeaderLink href="/owner" icon="⭐" label="All groups" />}
+      {user && <HeaderLink href="/account" icon="🔑" label="Password" />}
       {user && (
         <form action={signOut}>
           <button type="submit" className="cursor-pointer whitespace-nowrap px-3 py-1.5 hover:text-foreground">
